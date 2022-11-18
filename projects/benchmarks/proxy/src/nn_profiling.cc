@@ -10,8 +10,8 @@
 #include "ns_peripherals_power.h"
 #include "ns_usb.h"
 #include "ns_energy_monitor.h"
-
-
+#include "ns_cache_profile.h"
+#include "ns_power_profile.h"
 
 #define TF_LITE_STATIC_MEMORY 1
 #include "nn_profiling.h"
@@ -100,7 +100,7 @@ void try_streaming_model() {
 }
 
 const ns_power_config_t ns_benchmark = {
-    .eAIPowerMode = NS_MAXIMUM_PERF,
+    .eAIPowerMode = NS_MINIMUM_PERF,
     .bNeedAudAdc = false,
     .bNeedSharedSRAM = false,
     .bNeedCrypto = false,
@@ -120,34 +120,51 @@ ns_timer_config_t g_ns_tickTimer = {
 };
 
 int main(void) {
+	ns_cache_config_t cc;
+	ns_cache_dump_t start;
+	ns_cache_dump_t end;
 
     ns_core_init();
-  	ns_timer_init(&g_ns_tickTimer);
+  	// ns_timer_init(&g_ns_tickTimer);
+
 
     // enables crypto
     // ns_itm_printf_enable();
     // ns_debug_printf_enable();
     ns_power_config(&ns_benchmark);
-    ns_peripheral_button_init(&button_config);
-    am_hal_interrupt_master_enable();
+    // am_hal_pwrctrl_control(AM_HAL_PWRCTRL_CONTROL_DIS_PERIPHS_ALL, 0);
+
+	cc.enable = true;
+	// ns_cache_profiler_init(&cc);
+
+	// ns_pp_snapshot(false,0);
+    // ns_peripheral_button_init(&button_config);
+    // am_hal_interrupt_master_enable();
     ns_init_power_monitor_state();
 	// ns_deep_sleep();
     init_streaming_model();
 	// if (interpreter->arena_used_bytes() > kTensorArenaSize)
     // ns_lp_printf("arena used size %d\n", interpreter->arena_used_bytes());
 
-	am_hal_timer_clear(0);
+	// am_hal_timer_clear(0);
 	// put some garbage in input tensor
 	for (int i=0; i<1536; i++) {
 		model_input->data.f[i] = i;
 	}
 	ns_set_power_monitor_state(NS_IDLE);
-	ns_delay_us(1000000);
+
+
+	// ns_delay_us(1000000);
     // ns_lp_printf("Before: %d\n",ns_us_ticker_read(&g_ns_tickTimer));
+	// ns_capture_cache_stats(&start);
 	ns_set_power_monitor_state(NS_INFERING);
 	for (int i=0; i<100; i++) 
     	try_streaming_model();
 	ns_set_power_monitor_state(NS_IDLE);
+	// ns_capture_cache_stats(&end);
+
+	// ns_print_cache_stats_delta(&start, &end);
+
     // ns_lp_printf("After: %d\n",ns_us_ticker_read(&g_ns_tickTimer));
 
 	// print first few from output tensor
@@ -155,6 +172,6 @@ int main(void) {
 	// 	ns_lp_printf("%f\n", model_output->data.f[i]);
 	// }
 
-    while(1) {ns_deep_sleep();}
+    while(1) {am_hal_sysctrl_sleep(AM_HAL_SYSCTRL_SLEEP_DEEP);}
 	// while(1);
 }
