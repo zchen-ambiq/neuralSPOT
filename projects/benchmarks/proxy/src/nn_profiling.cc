@@ -100,6 +100,7 @@ void try_streaming_model() {
 }
 
 const ns_power_config_t ns_benchmark = {
+    // .eAIPowerMode = NS_MAXIMUM_PERF,
     .eAIPowerMode = NS_MINIMUM_PERF,
     .bNeedAudAdc = false,
     .bNeedSharedSRAM = false,
@@ -120,12 +121,13 @@ ns_timer_config_t g_ns_tickTimer = {
 };
 
 int main(void) {
-	ns_cache_config_t cc;
-	ns_cache_dump_t start;
-	ns_cache_dump_t end;
+	// ns_cache_config_t cc;
+	// ns_cache_dump_t start;
+	// ns_cache_dump_t end;
 
     ns_core_init();
   	// ns_timer_init(&g_ns_tickTimer);
+    MCUCTRL->ADCBATTLOAD_b.BATTLOAD = MCUCTRL_ADCBATTLOAD_BATTLOAD_DIS;
 
 
     // enables crypto
@@ -133,8 +135,49 @@ int main(void) {
     // ns_debug_printf_enable();
     ns_power_config(&ns_benchmark);
     // am_hal_pwrctrl_control(AM_HAL_PWRCTRL_CONTROL_DIS_PERIPHS_ALL, 0);
+    // MCUCTRL->PWRSW0_b.PWRSWVDDMDSP0DYNSEL = 0;    // Bit 18
+    // MCUCTRL->PWRSW0_b.PWRSWVDDMDSP1DYNSEL = 0;    // Bit 21
+    // MCUCTRL->PWRSW0_b.PWRSWVDDMLDYNSEL    = 0;    // Bit 24
+	//  MCUCTRL->MRAMPWRCTRL_b.MRAMPWRCTRL = 1;
+        am_hal_pwrctrl_mcu_memory_config_t McuMemCfg =
+        {
+            .eCacheCfg    = AM_HAL_PWRCTRL_CACHE_ALL,
+            .bRetainCache = false,
+            .eDTCMCfg     = AM_HAL_PWRCTRL_DTCM_128K,
+            .eRetainDTCM  = AM_HAL_PWRCTRL_DTCM_128K,
+            .bEnableNVM0  = true,
+            .bRetainNVM0  = false
+        };
 
-	cc.enable = true;
+        am_hal_pwrctrl_mcu_memory_config(&McuMemCfg);
+    am_hal_pwrctrl_dsp_memory_config_t sExtSRAMMemCfg =
+    {
+        .bEnableICache      = false,
+        .bRetainCache       = false,
+        .bEnableRAM         = false,
+        .bActiveRAM         = false,
+        .bRetainRAM         = false
+    };
+
+    if (am_hal_pwrctrl_dsp_memory_config(AM_HAL_DSP0, &sExtSRAMMemCfg) != 0)
+    // ||am_hal_pwrctrl_dsp_memory_config(AM_HAL_DSP1, &sExtSRAMMemCfg) != 0)
+    {
+        am_util_stdio_printf("DSP memory init error.\n");
+    }
+    MCUCTRL->ADCBATTLOAD_b.BATTLOAD = MCUCTRL_ADCBATTLOAD_BATTLOAD_DIS;
+    MCUCTRL->AUDADCPWRCTRL_b.AUDADCPWRCTRLSWE = 1;
+    MCUCTRL->AUDADCPWRCTRL_b.AUDADCAPSEN = 0;
+    MCUCTRL->AUDADCPWRCTRL_b.AUDADCBPSEN = 0;
+    MCUCTRL->AUDADCPWRCTRL_b.AUDBGTPEN = 0;
+    MCUCTRL->AUDADCPWRCTRL_b.AUDREFBUFPEN = 0;
+    MCUCTRL->AUDADCPWRCTRL_b.AUDREFKEEPPEN = 0;
+    MCUCTRL->AUDADCPWRCTRL_b.AUDADCINBUFEN = 0;
+    // MCUCTRL->AUDADCPWRCTRL_b.AUDREFKEEPPEN = 0;
+    // MCUCTRL->AUDADCPWRCTRL_b.AUDREFKEEPPEN = 0;
+
+
+
+	// cc.enable = true;
 	// ns_cache_profiler_init(&cc);
 
 	// ns_pp_snapshot(false,0);
