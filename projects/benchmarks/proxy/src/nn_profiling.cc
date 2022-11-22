@@ -174,7 +174,8 @@ int main(void) {
     MCUCTRL->AUDADCPWRCTRL_b.AUDADCINBUFEN = 0;
     // MCUCTRL->AUDADCPWRCTRL_b.AUDREFKEEPPEN = 0;
     // MCUCTRL->AUDADCPWRCTRL_b.AUDREFKEEPPEN = 0;
-
+    am_hal_sysctrl_fpu_enable();
+    am_hal_sysctrl_fpu_stacking_enable(true);
 
 
 	// cc.enable = true;
@@ -201,7 +202,7 @@ int main(void) {
     // ns_lp_printf("Before: %d\n",ns_us_ticker_read(&g_ns_tickTimer));
 	// ns_capture_cache_stats(&start);
 	ns_set_power_monitor_state(NS_INFERING);
-	for (int i=0; i<100; i++) 
+	for (int i=0; i<500; i++) 
     	try_streaming_model();
 	ns_set_power_monitor_state(NS_IDLE);
 	// ns_capture_cache_stats(&end);
