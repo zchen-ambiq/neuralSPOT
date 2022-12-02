@@ -21,18 +21,6 @@ LINT = clang-tidy
 RM = $(shell which rm 2>/dev/null)
 DOX = doxygen
 
-# EXECUTABLES = CC LD CP OD AR RD SIZE GCC JLINK JLINK_SWO
-# K := $(foreach exec,$(EXECUTABLES),\
-#         $(if $(shell which $($(exec)) 2>/dev/null),,\
-#         $(info $(exec) not found on PATH ($($(exec))).)$(exec)))
-# $(if $(strip $(value K)),$(info Required Program(s) $(strip $(value K)) not found))
-
-# ifneq ($(strip $(value K)),)
-# all clean:
-# 	$(info Tools $(TOOLCHAIN)-$(COMPILERNAME) not installed.)
-# 	$(RM) -rf bin
-# else
-
 CFLAGS+= -mthumb -mcpu=$(CPU) -mfpu=$(FPU) -mfloat-abi=$(FABI)
 CFLAGS+= -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-exceptions
 CCFLAGS+= -fno-use-cxa-atexit

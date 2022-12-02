@@ -29,9 +29,9 @@
 
 
 static constexpr int kTensorArenaSize = 1024 * 75;
-alignas(16) static uint8_t tensor_arena[kTensorArenaSize];
+AM_SHARED_RW alignas(16) static uint8_t tensor_arena[kTensorArenaSize];
 static constexpr int kVarArenaSize = 1024 * 10;
-alignas(16) static uint8_t var_arena[kVarArenaSize];
+AM_SHARED_RW alignas(16) static uint8_t var_arena[kVarArenaSize];
 
 static const tflite::Model* model = nullptr;
 static tflite::ErrorReporter* er = nullptr;
@@ -103,7 +103,7 @@ const ns_power_config_t ns_benchmark = {
     // .eAIPowerMode = NS_MAXIMUM_PERF,
     .eAIPowerMode = NS_MINIMUM_PERF,
     .bNeedAudAdc = false,
-    .bNeedSharedSRAM = false,
+    .bNeedSharedSRAM = true,
     .bNeedCrypto = false,
     .bNeedBluetooth = false,
     .bNeedUSB = false,
@@ -139,18 +139,18 @@ int main(void) {
     // MCUCTRL->PWRSW0_b.PWRSWVDDMDSP1DYNSEL = 0;    // Bit 21
     // MCUCTRL->PWRSW0_b.PWRSWVDDMLDYNSEL    = 0;    // Bit 24
 	//  MCUCTRL->MRAMPWRCTRL_b.MRAMPWRCTRL = 1;
-        am_hal_pwrctrl_mcu_memory_config_t McuMemCfg =
-        {
-            .eCacheCfg    = AM_HAL_PWRCTRL_CACHE_ALL,
-            .bRetainCache = false,
-            .eDTCMCfg     = AM_HAL_PWRCTRL_DTCM_128K,
-            .eRetainDTCM  = AM_HAL_PWRCTRL_DTCM_128K,
-            .bEnableNVM0  = true,
-            .bRetainNVM0  = false
-        };
-
-        am_hal_pwrctrl_mcu_memory_config(&McuMemCfg);
-    am_hal_pwrctrl_dsp_memory_config_t sExtSRAMMemCfg =
+	am_hal_pwrctrl_mcu_memory_config_t McuMemCfg =
+	{
+		.eCacheCfg    = AM_HAL_PWRCTRL_CACHE_ALL,
+		.bRetainCache = false,
+		.eDTCMCfg     = AM_HAL_PWRCTRL_DTCM_128K,
+		.eRetainDTCM  = AM_HAL_PWRCTRL_DTCM_128K,
+		.bEnableNVM0  = true,
+		.bRetainNVM0  = false
+	};
+	am_hal_pwrctrl_mcu_memory_config(&McuMemCfg);
+    
+	am_hal_pwrctrl_dsp_memory_config_t sExtSRAMMemCfg =
     {
         .bEnableICache      = false,
         .bRetainCache       = false,
@@ -160,7 +160,6 @@ int main(void) {
     };
 
     if (am_hal_pwrctrl_dsp_memory_config(AM_HAL_DSP0, &sExtSRAMMemCfg) != 0)
-    // ||am_hal_pwrctrl_dsp_memory_config(AM_HAL_DSP1, &sExtSRAMMemCfg) != 0)
     {
         am_util_stdio_printf("DSP memory init error.\n");
     }
@@ -176,6 +175,19 @@ int main(void) {
     // MCUCTRL->AUDADCPWRCTRL_b.AUDREFKEEPPEN = 0;
     am_hal_sysctrl_fpu_enable();
     am_hal_sysctrl_fpu_stacking_enable(true);
+
+	am_hal_daxi_config_t DaxiConfigLongAging =
+	{
+		.bDaxiPassThrough = false,
+		.bAgingSEnabled = false, //false means only age-out write/modified lines    
+		.eAgingCounter = AM_HAL_DAXI_CONFIG_AGING_1024,//1024 will age out a line in ~ 96 cycles.  Optimal for most use cases should be 256, 512, 1024, or 2048
+		.eNumBuf       = AM_HAL_DAXI_CONFIG_NUMBUF_32,
+		.eNumFreeBuf   = AM_HAL_DAXI_CONFIG_NUMFREEBUF_3,
+	};
+    am_hal_daxi_config(&DaxiConfigLongAging);
+
+
+
 
 
 	// cc.enable = true;
@@ -202,7 +214,7 @@ int main(void) {
     // ns_lp_printf("Before: %d\n",ns_us_ticker_read(&g_ns_tickTimer));
 	// ns_capture_cache_stats(&start);
 	ns_set_power_monitor_state(NS_INFERING);
-	for (int i=0; i<500; i++) 
+	for (int i=0; i<100; i++) 
     	try_streaming_model();
 	ns_set_power_monitor_state(NS_IDLE);
 	// ns_capture_cache_stats(&end);
