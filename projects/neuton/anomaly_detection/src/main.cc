@@ -8,10 +8,10 @@
 #include "ns_core.h"
 #include "ns_peripherals_button.h"
 #include "ns_peripherals_power.h"
-#include "testdata1.h"
+#include "testdata4.h"
 #include "neuton/neuton.h"
 
-neuton_input_t raw_inputs[7996];
+neuton_input_t raw_inputs[60000];
 
 int
 main(void) {
@@ -22,29 +22,33 @@ main(void) {
     ns_itm_printf_enable();
     ns_interrupt_master_enable();
 
-    for(int i = 0; i < 7996; i++) {
-        raw_inputs[i] = testData1[i];
+    for(int i = 0; i < 60000; i++) {
+        raw_inputs[i] = testData4[i];
     }
     neuton_nn_setup();
     neuton_inference_input_t* p_input;
-    p_input = neuton_nn_feed_inputs(raw_inputs, neuton_nn_uniq_inputs_num() * neuton_nn_input_window_size());
+    ns_lp_printf("unique inputS: %u\n", neuton_nn_uniq_inputs_num());
+    ns_lp_printf("window size: %u\n", neuton_nn_input_window_size());
+    for(int window = 0; window < 50; window++) {
+        p_input = neuton_nn_feed_inputs(&raw_inputs[window * 128], neuton_nn_uniq_inputs_num() * neuton_nn_input_window_size());
 
-    /** Run inference */
-    if (p_input)
-    {
-        neuton_u16_t predicted_target;
-        const neuton_output_t* probabilities;
-        neuton_i16_t outputs_num = neuton_nn_run_inference(p_input, &predicted_target, &probabilities);
-
-        if (outputs_num > 0)
+        /** Run inference */
+        if (p_input)
         {
-            ns_lp_printf("Predicted target %d with probability %f\r\n", predicted_target, probabilities[predicted_target]);
+            neuton_u16_t predicted_target;
+            const neuton_output_t* probabilities;
+            neuton_i16_t outputs_num = neuton_nn_run_inference(p_input, &predicted_target, &probabilities);
 
-            ns_lp_printf("All probabilities:\r\n");
-            for (size_t i = 0; i < outputs_num; i++)
-                ns_lp_printf("%f,", probabilities[i]);
-        }
+            if (outputs_num > 0)
+            {
+                ns_lp_printf("Predicted target %d with probability %f\r\n", predicted_target, probabilities[predicted_target]);
+
+                ns_lp_printf("All probabilities:\r\n");
+                for (size_t i = 0; i < outputs_num; i++)
+                    ns_lp_printf("%f,", probabilities[i]);
+            }
     }
+ }
     return 0;
 }
 
