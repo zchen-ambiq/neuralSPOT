@@ -135,7 +135,7 @@ const ns_power_config_t ns_audio_default = {.eAIPowerMode = NS_MAXIMUM_PERF,
                                             .bNeedIOM = false,
                                             .bNeedAlternativeUART = false,
                                             .b128kTCM = false,
-                                            .bEnableTempCo = true,
+                                            .bEnableTempCo = false,
                                             .bNeedITM = false};
 uint32_t
 ns_set_performance_mode(ns_power_mode_e eAIPowerMode) {
