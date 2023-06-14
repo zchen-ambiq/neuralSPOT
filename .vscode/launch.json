@@ -32,5 +32,33 @@
                 ]
             }
         },
+        {
+            "name": "rpc_client",
+            "cwd": "${workspaceRoot}/build/examples/rpc_client/",
+            "executable": "${workspaceRoot}/build/examples/rpc_client/rpc_client.axf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "jlink",
+            "serverpath": "/usr/local/bin/JLinkGDBServerCL",
+            "device": "AMAP42KK-KBR",
+            "svdFile": "${workspaceRoot}/build/board.svd",
+            "interface": "swd",
+            // "serialNumber": "483127213",
+            "armToolchainPath": "/usr/local/bin/",
+            "postLaunchCommands": [
+                "set output-radix 16",         // uncomment if you want decimal output instead of hexadecimal
+            ],
+            "showDevDebugOutput": "raw",
+            "preLaunchTask": "Build_EVB_FW",
+            "swoConfig": {
+                "enabled": true,
+                "cpuFrequency": 96000000,
+                "swoFrequency": 1000000,
+                "source": "probe",
+                "decoders": [
+                    { "type": "console", "label": "ITM", "port": 0, "showOnStartup": true, "timestamp": true }
+                ]
+            }
+        },
     ]
 }
