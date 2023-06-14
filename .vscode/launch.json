@@ -1,0 +1,36 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "basic_tf_stub",
+            "cwd": "${workspaceRoot}/build/examples/basic_tf_stub/",
+            "executable": "${workspaceRoot}/build/examples/basic_tf_stub/basic_tf_stub.axf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "jlink",
+            "serverpath": "/usr/local/bin/JLinkGDBServerCL",
+            "device": "AMAP42KK-KBR",
+            "svdFile": "${workspaceRoot}/build/board.svd",
+            "interface": "swd",
+            // "serialNumber": "483127213",
+            "armToolchainPath": "/usr/local/bin/",
+            "postLaunchCommands": [
+                "set output-radix 16",         // uncomment if you want decimal output instead of hexadecimal
+            ],
+            "showDevDebugOutput": "raw",
+            "preLaunchTask": "Build_EVB_FW",
+            "swoConfig": {
+                "enabled": true,
+                "cpuFrequency": 96000000,
+                "swoFrequency": 1000000,
+                "source": "probe",
+                "decoders": [
+                    { "type": "console", "label": "ITM", "port": 0, "showOnStartup": true, "timestamp": true }
+                ]
+            }
+        },
+    ]
+}
